@@ -16,18 +16,20 @@
     </v-toolbar>
 
     <v-content>
-      <HelloWorld/>
+      <NurseInterface />
     </v-content>
   </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld'
+// import HelloWorld from './components/HelloWorld'
+import NurseInterface from './components/NurseInterface'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    // HelloWorld,
+    NurseInterface
   },
   data () {
     return {
