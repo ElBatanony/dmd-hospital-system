@@ -4,11 +4,11 @@
           <v-toolbar-title> Medicine list </v-toolbar-title>
           <v-spacer></v-spacer>
           <v-text-field
-              v-model="search"
-              append-icon="search"
-              label="Search"
-              single-line
-              hide-details
+            v-model="search"
+            append-icon="search"
+            label="Search"
+            single-line
+            hide-details
           ></v-text-field>
         </v-card-title>
 
@@ -24,11 +24,12 @@
           <template v-slot:items="props">
               <td>
                   <v-checkbox
-                  v-model="props.selected"
-                  primary
-                  hide-details
+                    v-model="props.selected"
+                    primary
+                    hide-details
                   ></v-checkbox>
               </td>
+              <td hidden>{{ props.item.id }}</td>
               <td>{{ props.item.name }}</td>
               <td>{{ props.item.quantity }}</td>
               <td>{{ props.item.expDate }}</td>
@@ -36,7 +37,7 @@
 
           <template v-slot:footer>
             <td :colspan="headers.length">
-              <!-- <v-btn color="error">Delete</v-btn> -->
+              <v-btn color="error" v-on:click="deleteSelectedMedicines()">Delete Selected</v-btn>
             </td>
           </template>
         </v-data-table>
@@ -51,10 +52,16 @@
   export default {
     name: "Pharmacist",
     methods: {
-      
+      deleteSelectedMedicines() {        
+        for (let med of this.selected) {
+          db.collection("medicines")
+          .doc(med.id.trim())
+          .delete()
+        }
+      }
     },
     computed: {
-      
+
     },
     data() {
       return {
@@ -67,6 +74,7 @@
         ],
         medicines: [
           { 
+            id: "Loading...",
             name: "Loading...",
             quantity: "Loading...",
             expDate: "Loading..."
@@ -85,6 +93,7 @@
         querySnapshot.forEach(function(doc) {
           app.medicines.push(
             {
+              id: doc.id,
               name: doc.name,
               quantity: doc.quantity,
               expDate: doc.expDate,
