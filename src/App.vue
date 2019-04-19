@@ -14,7 +14,9 @@
     </v-toolbar>
 
     <v-content>
-      <component :is="current"></component>
+      <keep-alive>
+        <component :is="current"></component>
+      </keep-alive>
     </v-content>
   </v-app>
 </template>
