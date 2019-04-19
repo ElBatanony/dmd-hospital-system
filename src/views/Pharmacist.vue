@@ -37,7 +37,7 @@
 
           <template v-slot:footer>
             <td :colspan="headers.length">
-              <v-btn color="error" v-on:click="deleteSelectedMedicines()">Delete Selected</v-btn>
+              <v-btn :disabled="disabled" color="error" v-on:click="deleteSelectedMedicines()">Delete Selected</v-btn>
             </td>
           </template>
         </v-data-table>
@@ -61,7 +61,9 @@
       }
     },
     computed: {
-
+      disabled: function() {
+        return !(this.selected.length > 0);
+      }
     },
     data() {
       return {
