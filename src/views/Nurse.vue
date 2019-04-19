@@ -22,7 +22,7 @@
             <td>{{ props.item.patientId }}</td>
             <!-- <td>{{ props.item.pName }}</td> -->
             <td>
-              <v-btn v-on:click="remove(props.item.roomId)" round dark ripple>delete</v-btn>
+              <v-btn v-on:click="remove(props.item.roomId)" round dark ripple>free</v-btn>
             </td>
           </template>
           <v-alert
