@@ -1,6 +1,6 @@
-<template> 
-  <div> 
-    <h1>Login succeeded. Redirecting...</h1> 
+<template>
+  <div>
+    <h1>Login succeeded. Redirecting...</h1>
   </div>
 </template>
 
@@ -28,23 +28,22 @@ export default {
       user: {}
     };
   },
-    created() {
-        setTimeout(this.redirect, 1000);
-    }
-  ,
+  created() {
+    setTimeout(this.redirect, 1000);
+  },
   methods: {
     redirect() {
       this.user = firebase.auth().currentUser;
-      console.log(this.user)
+      //console.log(this.user);
       if (this.user) {
-            this.name = this.user.displayName;
-            this.email = this.user.email;
-            this.userId = this.user.uid;
+        this.name = this.user.displayName;
+        this.email = this.user.email;
+        this.userId = this.user.uid;
 
-            for (let i = 0; i < userRouting.length; i++) {
-              if (this.user.email == userRouting[i][0])
-                this.$router.push(userRouting[i][1]);
-            }
+        for (let i = 0; i < userRouting.length; i++) {
+          if (this.user.email == userRouting[i][0])
+            this.$router.push(userRouting[i][1]);
+        }
       }
     }
   }

@@ -27,12 +27,9 @@
               <v-btn round dark ripple>delete</v-btn>
             </td>
           </template>
-          <v-alert
-            v-slot:no-results
-            :value="true"
-            color="error"
-            icon="warning"
-          >Your search for "{{ search }}" found no results.</v-alert>
+          <v-alert v-slot:no-results :value="true" color="error" icon="warning"
+            >Your search for "{{ search }}" found no results.</v-alert
+          >
         </v-data-table>
       </v-card>
     </v-tab-item>
@@ -46,15 +43,15 @@
 </template>
 
 <script>
-import firebase from 'firebase'
+import firebase from "firebase";
 //import firebaseConfig from './firebaseConfig'
 
 //const firebaseApp = firebase.initializeApp(firebaseConfig)
 
-//export default firebaseApp.firestore() 
+//export default firebaseApp.firestore()
 //import db from "./firebaseinit";
 
-var db = firebase.firestore()
+var db = firebase.firestore();
 
 export default {
   data() {
@@ -106,29 +103,28 @@ export default {
         //   pName: "John Doe",
         //   protein: 4.0
         // }
-      ],
+      ]
     };
   },
-  created () {
-      console.log(this.$route.name)
-      db.collection('rooms').get().then(querySnapshot => {
-          querySnapshot.forEach(doc => {
-              console.log(doc.data())
-              const data = {
-                //   'roomId': doc.data().roomId,
-                'roomId': doc.data().roomID,
-                'bedId': doc.data().roomID,
-                'patientId': "1",
-                'pName': "John Doe",
-                // 'protein': doc.data().patient
-                
-              }
-              this.rooms.push(data)
-          })
-      })
+  created() {
+    db.collection("rooms")
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          //console.log(doc.data());
+          const data = {
+            //   'roomId': doc.data().roomId,
+            roomId: doc.data().roomID,
+            bedId: doc.data().roomID,
+            patientId: "1",
+            pName: "John Doe"
+            // 'protein': doc.data().patient
+          };
+          this.rooms.push(data);
+        });
+      });
   }
 };
 </script>
 
-<style>
-</style>
+<style></style>
