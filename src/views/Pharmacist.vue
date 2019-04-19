@@ -15,7 +15,7 @@
         <v-data-table
           v-model="selected"
           :headers="headers"
-          :items="drugs"
+          :items="medicines"
           :search="search"
           item-key="name"
           select-all
@@ -44,36 +44,55 @@
 </template>
 
 <script>
-export default {
-  name: "Pharmacist",
-  methods: {
-    
-  },
-  computed: {
-    
-  },
-  data() {
-    return {
-      search: "",
-      selected: [],
-      headers: [
-        {text: "Name", value: "name"},
-        {text: "Quantity", value: "quantity"},
-        {text: "Expiration date", value: "expDate"}
-      ],
-      drugs: [
-        {
-          name: "Maxicold",
-          quantity: 10,
-          expDate: "11/09/19"
-        },
-        {
-          name: "Antigrippin",
-          quantity: 3,
-          expDate: "12/09/18"
-        }
-      ]
+  import firebase from 'firebase'
+
+  var app, db
+
+  export default {
+    name: "Pharmacist",
+    methods: {
+      
+    },
+    computed: {
+      
+    },
+    data() {
+      return {
+        search: "",
+        selected: [],
+        headers: [
+          {text: "Name", value: "name"},
+          {text: "Quantity", value: "quantity"},
+          {text: "Expiration date", value: "expDate"}
+        ],
+        medicines: [
+          { 
+            name: "Loading...",
+            quantity: "Loading...",
+            expDate: "Loading..."
+          }
+        ]
+      }
+    },
+    created() {
+      db = firebase.firestore();
+
+      app = this;
+
+      db.collection("medicines").onSnapshot(function(querySnapshot) {
+        app.medicines = [];
+
+        querySnapshot.forEach(function(doc) {
+          app.medicines.push(
+            {
+              name: doc.name,
+              quantity: doc.quantity,
+              expDate: doc.expDate,
+              ...doc.data()
+            }
+          );
+        });
+      });
     }
   }
-}
 </script>
