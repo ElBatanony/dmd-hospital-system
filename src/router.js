@@ -81,6 +81,12 @@ export default new Router({
       name: "laboratorist",
       component: () =>
         import("./views/Laboratorist.vue")
+    },
+    {
+      path: "/new_report",
+      name: "New Report",
+      component: () =>
+        import("./views/NewReport.vue")
     }
   ]
 });
