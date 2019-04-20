@@ -35,10 +35,56 @@
                   hide-details
                 ></v-checkbox>
               </td>
+
               <td hidden key="id">{{ props.item.id }}</td>
-              <td>{{ props.item.name }}</td>
-              <td>{{ props.item.quantity }}</td>
-              <td>{{ props.item.expDate }}</td>
+
+              <td>
+                <v-text-field
+                  v-model="props.item.name"
+                  :value="props.item.name"
+                  required
+                ></v-text-field>
+              </td>
+
+              <td>
+                <v-layout row wrap justify-start align-center>
+                  <v-flex xs2>
+                    <v-btn
+                      flat
+                      icon
+                      color="error"
+                      @click="decrease(props.item.id, props.item.quantity)"
+                    ><v-icon>remove</v-icon></v-btn>
+                  </v-flex>
+
+                  <v-flex xs3>
+                    <v-text-field 
+                      mask="######"
+                      v-model="props.item.quantity"
+                      :value="props.item.quantity"
+                      required
+                    ></v-text-field>
+                  </v-flex>
+                  
+                  <v-flex xs2>
+                    <v-btn
+                      flat
+                      icon
+                      color="primary"
+                      @click="increase(props.item.id, props.item.quantity)"
+                    ><v-icon>add</v-icon></v-btn>
+                  </v-flex>
+                </v-layout>
+              </td>
+
+              <td>
+                <v-text-field
+                  mask="date"
+                  v-model="props.item.expDate"
+                  :value="props.item.expDate"
+                  required
+                  ></v-text-field>
+              </td>
             </template>
 
             <template v-slot:footer>
@@ -46,8 +92,14 @@
                 <v-btn 
                   color="error" 
                   :disabled="drugsAreChosen" 
-                  @click="deleteSelectedMedicines()"
+                  @click="deleteSelected()"
                 >Delete Selected</v-btn>
+
+                <v-btn 
+                  color="info"
+                  :disabled="drugsAreChosen"
+                  @click="updateSelected()"
+                >Update Selected</v-btn>
               </td>
             </template>
           </v-data-table>
@@ -75,7 +127,7 @@
                     name="drugQuantity"
                     v-model="drugQuantity"
                     label="Quantity"
-                    type="number"
+                    mask="######"
                     required
                   ></v-text-field>
                 </v-flex>
@@ -113,21 +165,31 @@
   export default {
     name: "Pharmacist",
     methods: {
-      deleteSelectedMedicines() {        
+      deleteSelected() {        
         for (let med of this.selected) {
           db.collection("medicines")
-          .doc(med.id.trim())
+          .doc(med.id)
           .delete()
         }
       },
+      updateSelected() { 
+        for (let med of this.selected) {
+          if (med.name != "" && med.expDate.length == 8) {
+            db.collection("medicines").doc(med.id).update({
+              name: med.name,
+              quantity: med.quantity,
+              expDate: med.expDate
+            });
+          }
+        }
+
+        this.selected = []
+      },
       addMedicine() {
-        var expDate = this.drugExpDate,
-            expDateFormatted = expDate.substring(0, 2) + '/' + expDate.substring(2, 4) + '/' + expDate.substring(4, 8);
-        
         const response = db.collection("medicines").add({
           name: this.drugName,
-          quantity: this.drugQuantity,
-          expDate: expDateFormatted
+          quantity: Number(this.drugQuantity),
+          expDate: this.drugExpDate
         });
 
         response.then(function(data) {
@@ -138,14 +200,26 @@
 
         this.$refs.drugInfo.reset()
       },
+      increase(docId, quantity) {
+        db.collection("medicines").doc(docId).update({
+          quantity: Number(quantity) + 1
+        });
+      },
+      decrease(docId, quantity) {
+        if (quantity > 0) {
+          db.collection("medicines").doc(docId).update({
+            quantity: Number(quantity) - 1
+          });
+        }
+      }
     },
     computed: {
       drugsAreChosen: function() {
         return !(this.selected.length > 0);
       },
       formIsValid: function() {
-        return this.drugName != "" 
-            && this.drugQuantity != null 
+        return this.drugName != ""
+            && this.drugQuantity != null
             && this.drugExpDate.length == 8;
       }
     },
