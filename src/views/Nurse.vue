@@ -20,7 +20,7 @@
             <td>{{ props.item.roomId }}</td>
             <td>{{ props.item.roomType }}</td>
             <td>{{ props.item.patientId }}</td>
-            <!-- <td>{{ props.item.pName }}</td> -->
+            <!-- <td>{{ props.item.patientName }}</td> -->
             <td>
               <v-btn v-on:click="remove(props.item.roomId)" round dark ripple>free</v-btn>
             </td>
@@ -71,18 +71,24 @@
 import firebase from 'firebase'
 
 var db = firebase.firestore()
+var nurse = this
+var newT = this
+var pName = ''
+var names = []
 
 export default {
   data() {
     return {
       remove: function(id) {
         var deleteID = 0;
-        // console.log(db.collection('patients').doc('p1'))
         db.collection('rooms').get().then(querySnapshot => {
           querySnapshot.forEach(doc => {
               if(doc.data().roomID === id){
                 deleteID = doc.id
-                db.collection('rooms').doc(deleteID).delete()
+                db.collection('rooms').doc(deleteID).update({
+                  free: true
+                })
+                nurse.rooms = nurse.rooms.filter(value => value.roomID == id)
               }
           })
         })
@@ -102,16 +108,15 @@ export default {
           text: "Patient ID",
           value: "patientId"
         },
-        // { text: "Patient Name", value: "pName" },
+        // {text: "Patient Name", value: "patientName"},
         { text: "Edit Info", value: "edit" }
       ],
     
       rooms: [],
-    
       search2: "",
       headers2: [
         { text: "Test Type", value: "testT" },
-        { text: "Test Type", value: "testR" },
+        { text: "Test Result", value: "testR" },
         { text: "Laboratorist", value: "laboratorist" },
         { text: "Patient", value: "patient" }
       ],
@@ -119,33 +124,62 @@ export default {
     };
   },
   created () {
-      console.log(this.$route.name)
-      console.log(db.collection('rooms').doc('1'))
-      db.collection('rooms').get().then(querySnapshot => {
-          querySnapshot.forEach(doc => {
-              var pID = doc.data().patient.id
-              const data = {
-                'roomId': doc.data().roomID,
-                'roomType': doc.data().roomType,
-                'patientId': doc.data().patient.id,
-                // 'pName': "John Doe" //doc.data().patient.get().data().name,
-              }
-              this.rooms.push(data)
+    nurse = this
+    firebase.auth().onAuthStateChanged(function(user) {
+      if(user){
+      console.log(nurse.$route.name)
+      db.collection('rooms').where("nurse", "==", firebase.auth().currentUser.uid).where("free", "==", false)
+      .get().then(querySnapshot => {
+        querySnapshot.forEach(doc2 => {
+          
+          var names = []
+          console.log(doc2.data().patient)
+          var pName = db.collection('patients').where("PID", "==", doc2.data().patient).get().then(querySnapshot2 =>{
+            querySnapshot2.forEach(doc3 =>{
+              
+              names.name = doc3.data().name;
+              console.log("doc3.name=", doc3.data().name)
+              
+              
+            })
+            
           })
-      })
+          
+          console.log(pName)
+          const data = {
+                'roomId': doc2.data().roomID,
+                'roomType': doc2.data().roomType,
+                'patientId': doc2.data().patient,
+             
+          }
+          nurse.rooms.push(data)
+        })
+      });
+
+      names = []
+      names.push(1)
+      console.log(names)
+      console.log(names[0])
+      
+      
       db.collection('reports').get().then(querySnapshot =>{
         querySnapshot.forEach(doc => {
+          
           const data = {
             'laboratorist': doc.data().laboratorist.id,
-            'patient': doc.data().patient.id,
+            'patient': doc.data().patient,
             'testT': doc.data().testT,
             'testR': doc.data().testR
           
           }
-          this.reports.push(data)
+          nurse.reports.push(data)
         })
       }) 
-  }
+      }
+    });
+  },
+
+  
 };
 </script>
 
