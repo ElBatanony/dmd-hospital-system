@@ -26,12 +26,9 @@
               <v-btn v-on:click="remove(props.item.roomId)" round dark ripple>free</v-btn>
             </td>
           </template>
-          <v-alert
-            v-slot:no-results
-            :value="true"
-            color="error"
-            icon="warning"
-          >Your search for "{{ search }}" found no results.</v-alert>
+          <v-alert v-slot:no-results :value="true" color="error" icon="warning"
+            >Your search for "{{ search }}" found no results.</v-alert
+          >
         </v-data-table>
       </v-card>
     </v-tab-item>
@@ -327,5 +324,4 @@ export default {
 };
 </script>
 
-<style>
-</style>
+<style></style>
