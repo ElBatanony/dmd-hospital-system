@@ -1,47 +1,94 @@
 <template>
-    <v-card>
-        <v-card-title>
-          <v-toolbar-title> Medicine list </v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-text-field
-            v-model="search"
-            append-icon="search"
-            label="Search"
-            single-line
-            hide-details
-          ></v-text-field>
-        </v-card-title>
+  <v-container
+    fluid
+    grid-list-lg
+  >
+    <v-layout row wrap>
+      <v-flex xs12>
+        <v-card>
+          <v-card-title>
+            <v-toolbar-title> Medicine list </v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-text-field
+              v-model="search"
+              append-icon="search"
+              label="Search"
+              single-line
+              hide-details
+            ></v-text-field>
+          </v-card-title>
 
-        <v-data-table
-          v-model="selected"
-          :headers="headers"
-          :items="medicines"
-          :search="search"
-          item-key="name"
-          select-all
-          class="elevation-1"
-        >
-          <template v-slot:items="props">
+          <v-data-table
+            v-model="selected"
+            :headers="headers"
+            :items="medicines"
+            :search="search"
+            item-key="name"
+            select-all
+            class="elevation-1"
+          >
+            <template v-slot:items="props">
               <td>
-                  <v-checkbox
-                    v-model="props.selected"
-                    primary
-                    hide-details
-                  ></v-checkbox>
+                <v-checkbox
+                  v-model="props.selected"
+                  primary
+                  hide-details
+                ></v-checkbox>
               </td>
               <td hidden>{{ props.item.id }}</td>
               <td>{{ props.item.name }}</td>
               <td>{{ props.item.quantity }}</td>
               <td>{{ props.item.expDate }}</td>
-          </template>
+            </template>
 
-          <template v-slot:footer>
-            <td :colspan="headers.length">
-              <v-btn :disabled="disabled" color="error" v-on:click="deleteSelectedMedicines()">Delete Selected</v-btn>
-            </td>
-          </template>
-        </v-data-table>
-    </v-card>
+            <template v-slot:footer>
+              <td :colspan="headers.length">
+                <v-btn :disabled="disabled" color="error" v-on:click="deleteSelectedMedicines()">Delete Selected</v-btn>
+              </td>
+            </template>
+          </v-data-table>
+        </v-card>
+      </v-flex>
+
+      <v-flex xs12>
+        <v-card>
+          <v-card-title>
+            <v-toolbar-title>Add medicine</v-toolbar-title>
+          </v-card-title>
+
+          <v-container>
+            <v-form>
+              <v-text-field
+                label="Name"
+                required
+              ></v-text-field>
+
+              <v-layout row wrap>
+                <v-flex>
+                  <v-text-field
+                    label="Quantity"
+                    type="number"
+                    required
+                  ></v-text-field>
+                </v-flex>
+
+                <v-flex>
+                  <v-text-field
+                    label="Expiration date"
+                    mask="##/##/####"
+                    placeholder="11/02/2019"
+                    required
+                  ></v-text-field>
+                </v-flex>
+              </v-layout>
+
+              <v-btn color="success">submit</v-btn>
+            </v-form>
+          </v-container>
+        </v-card>
+      </v-flex>
+    </v-layout>
+  </v-container>
 </template>
 
 <script>
