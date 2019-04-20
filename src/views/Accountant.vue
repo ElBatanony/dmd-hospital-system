@@ -43,7 +43,7 @@
                             </v-menu>
                         </td><!-- MEDLIST BUTTON -->
                         <td>
-                            <v-btn flat small light ripple @click="delete(props.item.bId)">delete</v-btn>
+                            <v-btn flat small light ripple v-on:click="remove(props.item.bId)">delete</v-btn>
                         </td><!-- DELETE BUTTON -->
                     </template>
 
@@ -65,15 +65,19 @@
 <script>
     import firebase from 'firebase'
 
-    const db = firebase.firestore();
+    const db = firebase.firestore()
 
     export default {
-
         data() {
             return {
-                snackbar: false,
-                text: 'Snackbar is here',
-                timeout: 5000,
+                remove: function(id){
+                    db.collection('bills').doc(id).delete().then(function () {
+                        console.log("DOCUMENT MUST BE DELETED");
+                        this.$router.push("accountant/");
+                    }).catch(function (error) {
+                        console.error("ERROR: ", error);
+                    });
+                },
                 search: "",
                 header: [
                     {text: "ID", align: "left", value: "bId"},
@@ -95,16 +99,10 @@
                         bQuantity: doc.data().quantity,
                         bDate: doc.data().date.toDate(),
                         bMedList: doc.data().medList,
-
                     };
                     this.bills.push(data)
                 })
             })
-        },
-        methods: {
-            delete: function (id) {
-                db.collection('bills').doc(id).delete()
-            }
         }
     }
 </script>
