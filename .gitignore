@@ -1,5 +1,8 @@
 .DS_Store
 node_modules
+data_generator
+venv
+cred.json
 /dist
 
 # local env files
