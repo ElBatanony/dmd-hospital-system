@@ -87,6 +87,12 @@ export default new Router({
       name: "New Report",
       component: () =>
         import("./views/NewReport.vue")
-    }
+    },
+    {
+      path: "/edit_report/:report_id",
+      name: "Edit Report",
+      component: () =>
+        import("./views/EditReport.vue")
+    },
   ]
 });

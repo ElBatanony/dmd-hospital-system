@@ -35,7 +35,7 @@
             rows="2"
         ></v-textarea>
 
-        <v-btn @click="submit" color="success">submit</v-btn>
+        <v-btn @click="submit" color="success">save</v-btn>
         <v-btn @click="back">back</v-btn>
     </v-form>  
 </template>

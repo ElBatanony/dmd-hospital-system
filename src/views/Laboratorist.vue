@@ -22,7 +22,7 @@
                 <td>{{ props.item.testT }}</td>
                 <td>{{ props.item.testR }}</td>
                 <td>
-                <v-btn round dark ripple to="/edit_report">edit</v-btn>
+                <v-btn round dark ripple v-bind:to="{name: 'Edit Report', params: {report_id: props.item.report_id}}">edit</v-btn>
                 </td>
             </template>
             <v-alert
@@ -86,7 +86,6 @@ export default {
         }
       ],
       reports: [],
-      report_id: ''
     };
   },
     created () {
