@@ -12,7 +12,12 @@ class Entity(ABC):
     def to_dict(self):
         pass
 
+    @abstractmethod
+    def post_action(self):
+        pass
+
     def save(self, db: firestore):
         doc = db.collection(self.collection).document()
-        self.ID = doc.id
+        self.id = doc.id
         doc.set(self.to_dict())
+        self.post_action()
