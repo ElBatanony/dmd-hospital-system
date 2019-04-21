@@ -107,7 +107,7 @@
     >
       <v-card>
         <v-card-title>
-          <span class="headline">RoomAllocation ID: {{freeRoom.roomID}}</span>
+          <span class="headline">RoomAllocation ID: {{freeRoom.roomId}}</span>
         </v-card-title>
         <v-card-text>
           <v-container grid-list-md>
@@ -155,7 +155,7 @@ var adjust = function(){
         querySnapshot.forEach(doc2 => {
           
           var data = {
-                'roomId': doc2.data().roomID,
+                'roomId': doc2.data().roomId,
                 'roomType': doc2.data().roomType,
                 'patientId': doc2.data().patient,
                 'patientName': ''
@@ -177,7 +177,7 @@ var adjust = function(){
       db.collection('rooms').where("free", "==", true).get().then(querySnapshot => {
         querySnapshot.forEach(doc2 => {
           var data = {
-                'roomId': doc2.data().roomID,
+                'roomId': doc2.data().roomId,
                 'roomType': doc2.data().roomType,
                 
           }
@@ -195,28 +195,29 @@ export default {
         var deleteID = 0;
         db.collection('rooms').get().then(querySnapshot => {
           querySnapshot.forEach(doc => {
-              if(doc.data().roomID === id){
+              if(doc.data().roomId === id){
                 deleteID = doc.id
                 db.collection('rooms').doc(deleteID).update({
-                  free: true
+                  free: true,
+                  patient: null
                 })
+                adjust();                
                 
-                adjust();
               }
           })
         })
+        
       },
       allocate: function() {
         
         nurse.roomDialog = false;
         nurse.freeRoom.free = false;
-        db.collection('rooms').where("roomID", "==", nurse.freeRoom.roomId).get().then(snapshot =>{
+        db.collection('rooms').where("roomId", "==", nurse.freeRoom.roomId).get().then(snapshot =>{
           snapshot.forEach(doc => {
-            
+            console.log(nurse.freeRoom)
             db.collection('rooms').doc(doc.id).update(nurse.freeRoom)
-            
+            adjust();    
           })
-          adjust();
           
         })
         
@@ -288,14 +289,14 @@ export default {
           
           const data = {
             'laboratorist': doc.data().laboratorist.id,
-            'patient': doc.data().patient,
+            'patient': doc.data().patient.id,
             'testT': doc.data().testT,
             'testR': doc.data().testR,
             'patientName': '',
             'laboratoristName': ''
           }
 
-          db.collection('patients').where("PID", "==", doc.data().patient).get()
+          db.collection('patients').where("PID", "==", doc.data().patient.id).get()
             .then(querySnapshot2 =>{
               if(querySnapshot2.docs[0]){
                 data.patientName = querySnapshot2.docs[0].data().name          
@@ -304,14 +305,14 @@ export default {
               }
           })
 
-          db.collection('employees').where("id", "==", doc.data().laboratorist).get()
-            .then(querySnapshot2 =>{
-              if(querySnapshot2.docs[0]){
-                data.laboratoristName = querySnapshot2.docs[0].data().name          
-              }else{
-                data.laboratoristName = 'undefined'
-              }
-          })
+          var refDoc = db.collection('employees').doc(doc.data().laboratorist.id)
+          if(refDoc){
+            refDoc.get().then(snapshot =>{
+              data.laboratoristName = snapshot.data().name;  
+            })
+          }else{
+            data.laboratoristName = 'undefined'
+          }
 
           nurse.reports.push(data)
         })
