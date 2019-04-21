@@ -71,9 +71,6 @@ export default new Router({
       path: "/laboratorist",
       name: "laboratorist",
       component: () => import("./views/Laboratorist.vue")
-    }
-      component: () =>
-        import("./views/Laboratorist.vue")
     },
     {
       path: "/new_report",
@@ -84,6 +81,6 @@ export default new Router({
       path: "/edit_report/:report_id",
       name: "Edit Report",
       component: () => import("./views/EditReport.vue")
-    },
+    }
   ]
 });

@@ -48,9 +48,12 @@ var db = firebase.firestore()
     data () { 
         return {
             valid: true,
+            laboratorist: '',
+            patient: '',
             laboratorists: [],
             patients: [],
             testR: '',
+            testT: '',
             types: [
                 'Complete Blood Count',
                 'Urinalysis',

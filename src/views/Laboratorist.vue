@@ -38,7 +38,6 @@
     <v-card-text style="height: 100px; position: relative">
         <v-fab-transition>
             <v-btn to="/new_report"
-                v-show="!hidden"
                 color="pink"
                 dark
                 absolute
