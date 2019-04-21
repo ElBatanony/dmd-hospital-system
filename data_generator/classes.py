@@ -7,9 +7,9 @@ from random import randint
 
 class Patient(Entity):
     def __init__(self):
+        super().__init__(collection=u'patients')
+
         profile = fake.simple_profile()
-        self.collection = u'patients'
-        self.PID = None
         self.name = profile['name']
         self.contactNumber = fake.phone_number()
         self.email = profile['mail']
@@ -26,7 +26,6 @@ class Patient(Entity):
 
     def to_dict(self):
         return {
-            u'PID': self.PID,
             u'name': self.name,
             u'address': self.address,
             u'contactNumber': self.contactNumber,
@@ -35,16 +34,12 @@ class Patient(Entity):
             u'email': self.email
         }
 
-    def save(self, db: firestore):
-        doc = db.collection(self.collection).document()
-        self.PID = doc.id
-        doc.set(self.to_dict())
-
 
 class Medicine(Entity):
     def __init__(self):
-        self.collection = u'medicines'
-        self.code = None
+        super().__init__(collection=u'medicines')
+
+        self.code = fake.pystr(min_chars=10, max_chars=10)
         self.price = randint(10, 1000)
         self.quantity = randint(10, 100)
 
@@ -54,9 +49,4 @@ class Medicine(Entity):
             u'price': self.price,
             u'quantity': self.quantity
         }
-
-    def save(self, db: firestore):
-        doc = db.collection(self.collection).document()
-        self.code = doc.id
-        doc.set(self.to_dict())
 

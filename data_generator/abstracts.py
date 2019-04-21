@@ -3,10 +3,16 @@ from firebase_admin import firestore
 
 
 class Entity(ABC):
+
+    def __init__(self, collection=None):
+        self.id = None
+        self.collection = collection
+
     @abstractmethod
     def to_dict(self):
         pass
 
-    @abstractmethod
     def save(self, db: firestore):
-        pass
+        doc = db.collection(self.collection).document()
+        self.ID = doc.id
+        doc.set(self.to_dict())
