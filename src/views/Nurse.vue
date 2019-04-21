@@ -18,12 +18,12 @@
         </v-card-title>
         <v-data-table :headers="headers" :items="rooms" :search="search">
           <template v-slot:items="props">
-            <td>{{ props.item.roomId }}</td>
+            <td>{{ props.item.roomNumber }}</td>
             <td>{{ props.item.roomType }}</td>
             <td>{{ props.item.patientId }}</td>
             <td>{{ props.item.patientName }}</td>
             <td>
-              <v-btn v-on:click="remove(props.item.roomId)" round dark ripple>free</v-btn>
+              <v-btn v-on:click="remove(props.item.roomNumber)" round dark ripple>free</v-btn>
             </td>
           </template>
           <v-alert
@@ -51,13 +51,13 @@
         </v-card-title>
         <v-data-table :headers="headers3" :items="rooms2" :search="search3">
           <template v-slot:items="props">
-            <td>{{ props.item.roomId }}</td>
+            <td>{{ props.item.roomNumber }}</td>
             <td>{{ props.item.roomType }}</td>
             <!-- <td>{{ props.item.patientId }}</td> -->
             <!-- <td>{{ props.item.patientName }}</td> -->
-            <td>
-              <v-btn v-on:click="openRoomDialog(props.item.roomId)" round dark ripple>Allocate</v-btn>
-            </td>
+            <!-- <td>
+              <v-btn v-on:click="openRoomDialog(props.item.roomNumber)" round dark ripple>Allocate</v-btn>
+            </td> -->
           </template>
           <v-alert
             v-slot:no-results
@@ -110,7 +110,7 @@
     >
       <v-card>
         <v-card-title>
-          <span class="headline">RoomAllocation ID: {{freeRoom.roomId}}</span>
+          <span class="headline">RoomAllocation ID: {{freeRoom.roomNumber}}</span>
         </v-card-title>
         <v-card-text>
           <v-container grid-list-md>
@@ -158,18 +158,37 @@ var adjust = function(){
         querySnapshot.forEach(doc2 => {
           
           var data = {
-                'roomId': doc2.data().roomId,
+                'roomNumber': doc2.data().roomNumber,
                 'roomType': doc2.data().roomType,
-                'patientId': doc2.data().patient,
+                'patientId': '',
                 'patientName': ''
           }
-          db.collection('patients').where("PID", "==", doc2.data().patient).get()
-            .then(querySnapshot2 =>{
-              if(querySnapshot2.docs[0]){
-                data.patientName = querySnapshot2.docs[0].data().name          
+
+          var pQuery = db.collection('room_assignment').get().then(querySnapshot => {
+            querySnapshot.forEach(doc => {
+              if(doc.data()){
+                if(doc.data().room){
+                  if(doc.data().room.id == doc2.id){
+                    data.patientId = doc.data().patient.id;
+                    db.collection('patients').doc(doc.data().patient.id).onSnapshot(doc2 =>{
+                    
+                      if(doc2.data()){
+                        data.patientName = doc2.data().name
+                      }else{
+                        data.patientName = 'undefined'
+                      }
+
+                    })
+                  }
+                }else{
+                  data.patientId = 'undefined';
+                  data.patientName = 'undefined';
+                }
               }else{
-                data.patientName = 'undefined'
+                data.patientId = 'undefined';
+                data.patientName = 'undefined';
               }
+            })
           })
           
           nurse.rooms.push(data)
@@ -177,12 +196,11 @@ var adjust = function(){
         
       });
 
-      db.collection('rooms').where("free", "==", true).get().then(querySnapshot => {
+      db.collection('rooms').where("free", "==", true).where("nurse", "==", firebase.auth().currentUser.uid).get().then(querySnapshot => {
         querySnapshot.forEach(doc2 => {
           var data = {
-                'roomId': doc2.data().roomId,
+                'roomNumber': doc2.data().roomNumber,
                 'roomType': doc2.data().roomType,
-                
           }
           nurse.rooms2.push(data)
         })
@@ -198,7 +216,7 @@ export default {
         var deleteID = 0;
         db.collection('rooms').get().then(querySnapshot => {
           querySnapshot.forEach(doc => {
-              if(doc.data().roomId === id){
+              if(doc.data().roomNumber === id){
                 deleteID = doc.id
                 db.collection('rooms').doc(deleteID).update({
                   free: true,
@@ -215,24 +233,18 @@ export default {
         
         nurse.roomDialog = false;
         nurse.freeRoom.free = false;
-        db.collection('rooms').where("roomId", "==", nurse.freeRoom.roomId).get().then(snapshot =>{
-          snapshot.forEach(doc => {
-            console.log(nurse.freeRoom)
-            db.collection('rooms').doc(doc.id).update(nurse.freeRoom)
-            adjust();    
-          })
           
-        })
+        
         
 
       },
-      openRoomDialog: function(roomId) {
+      openRoomDialog: function(roomNumber) {
         db.collection('patients').get().then(snapshot =>{
           snapshot.forEach(doc =>{
             nurse.freeRoomsList.push(doc.id)
           })
         })
-        nurse.freeRoom = nurse.rooms2.filter(x => x.roomId == roomId)[0];
+        nurse.freeRoom = nurse.rooms2.filter(x => x.roomNumber == roomNumber)[0];
         nurse.roomDialog = true;
       },
       roomDialog: false,
@@ -240,10 +252,10 @@ export default {
       freeRoomsList: [],
       headers: [
         {
-          text: "Room ID",
+          text: "Room Number",
           align: "left",
           sortable: true,
-          value: "roomId"
+          value: "roomNumber"
         },
         { text: "Type of room", value: "roomType" },
         {
@@ -267,13 +279,13 @@ export default {
       ],
       headers3: [
         {
-          text: "Room ID",
+          text: "Room Number",
           align: "left",
           sortable: true,
-          value: "roomId"
+          value: "roomNumber"
         },
         { text: "Type of room", value: "roomType" },
-        { text: "Room allocation", value: "edit2" },
+        // { text: "Room allocation", value: "edit2" },
       ],
       rooms2: [],
       search3: "",
@@ -289,29 +301,37 @@ export default {
       
       db.collection('reports').get().then(querySnapshot =>{
         querySnapshot.forEach(doc => {
-          
+          // if(doc.data())
           const data = {
             'laboratorist': doc.data().laboratorist.id,
             'patient': doc.data().patient.id,
-            'testT': doc.data().testT,
-            'testR': doc.data().testR,
+            'testT': doc.data().test_type,
+            'testR': doc.data().test_result,
             'patientName': '',
             'laboratoristName': ''
           }
 
-          db.collection('patients').where("PID", "==", doc.data().patient.id).get()
-            .then(querySnapshot2 =>{
-              if(querySnapshot2.docs[0]){
-                data.patientName = querySnapshot2.docs[0].data().name          
+          var pQuery = db.collection('patients').doc(doc.data().patient.id).get()
+          if(pQuery){  
+            pQuery.then(snapshot =>{
+              if(snapshot.data()){
+                data.patientName = snapshot.data().name
               }else{
                 data.patientName = 'undefined'
               }
-          })
+            })
+          } else {
+              data.patientName = 'undefined'
+          }
 
           var refDoc = db.collection('employees').doc(doc.data().laboratorist.id)
           if(refDoc){
-            refDoc.get().then(snapshot =>{
-              data.laboratoristName = snapshot.data().name;  
+            refDoc.onSnapshot(snapshot =>{
+              if(snapshot.data()){
+                data.laboratoristName = snapshot.data().name;  
+              }else{
+                data.laboratoristName = 'undefined'
+              }
             })
           }else{
             data.laboratoristName = 'undefined'
