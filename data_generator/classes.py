@@ -21,7 +21,7 @@ def get_collection(db: firestore, collection):
 
 
 def get_by_condition(arr, key, value):
-    return [doc for doc in arr if doc[key] == value]
+    return [doc for doc in arr if doc.to_dict()[key] == value]
 
 
 class Patient(Entity):
@@ -58,7 +58,7 @@ class Medicine(Entity):
     def __init__(self, db):
         super().__init__(db=db, collection=u'medicines')
 
-        self.expDate = get_fake_datetime(datetime.now(), datetime.now() + timedelta(days=120)).date()
+        self.expDate = get_fake_datetime(datetime.now(), datetime.now() + timedelta(days=120))
         self.name = choice(medNamed)
         self.price = randint(1, 100) * 10
         self.quantity = randint(10, 100)
