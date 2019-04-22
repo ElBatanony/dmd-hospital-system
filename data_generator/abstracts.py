@@ -4,15 +4,15 @@ from firebase_admin import firestore
 
 class Entity(ABC):
 
-    def __init__(self, collection=None):
+    def __init__(self, db=None, collection=None):
         self.id = None
+        self.db = db
         self.collection = collection
 
     @abstractmethod
     def to_dict(self):
         pass
 
-    @abstractmethod
     def post_action(self):
         pass
 

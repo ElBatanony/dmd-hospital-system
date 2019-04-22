@@ -3,13 +3,17 @@ from random import choice
 
 
 class SampleDatabase:
-    def __init__(self, db, patients=2, medicines=2):
+    def __init__(self, db, patients=2, medicines=2, employees=5, records=1, rooms=1, reports=1):
         self.db = db
 
         # initialize sample collection objects
         self.collections = []
+        self.collections.append(SampleCollection(self, 'employees', employees, Employee))
         self.collections.append(SampleCollection(self, 'patients', patients, Patient))
         self.collections.append(SampleCollection(self, 'medicines', medicines, Medicine))
+        self.collections.append(SampleCollection(self, 'records', records, Record))
+        self.collections.append(SampleCollection(self, 'rooms', rooms, Room))
+        self.collections.append(SampleCollection(self, 'report', reports, Report))
 
     def generate(self):
         for collection in self.collections:
@@ -30,9 +34,9 @@ class SampleCollection:
         for i in range(self.no_of_records):
             if self.context is not None:
                 attributes = self.__create_attr_dict()
-                record = self.entity_model(**attributes)
+                record = self.entity_model(self.database.db, **attributes)
             else:
-                record = self.entity_model()
+                record = self.entity_model(self.database.db)
             self.records.append(record)
 
     def __create_attr_dict(self):
