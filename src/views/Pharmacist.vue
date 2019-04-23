@@ -47,42 +47,34 @@
               </td>
 
               <td>
-                <v-layout row wrap justify-start align-center>
-                  <v-flex xs2>
-                    <v-btn
-                      flat
-                      icon
-                      color="error"
-                      @click="decrease(props.item.id, props.item.quantity)"
-                    ><v-icon>remove</v-icon></v-btn>
-                  </v-flex>
-
-                  <v-flex xs3>
-                    <v-text-field 
-                      mask="######"
-                      v-model="props.item.quantity"
-                      :value="props.item.quantity"
-                      required
-                    ></v-text-field>
-                  </v-flex>
-                  
-                  <v-flex xs2>
-                    <v-btn
-                      flat
-                      icon
-                      color="primary"
-                      @click="increase(props.item.id, props.item.quantity)"
-                    ><v-icon>add</v-icon></v-btn>
-                  </v-flex>
-                </v-layout>
+                <v-text-field 
+                  v-model="props.item.quantity"
+                  :value="props.item.quantity"
+                  required
+                ></v-text-field>
               </td>
 
               <td>
                 <v-text-field
-                  mask="date"
-                  v-model="props.item.expDate"
-                  :value="props.item.expDate"
+                  mask="#####"
+                  v-model="props.item.price"
+                  :value="props.item.price"
                   required
+                  ></v-text-field>
+              </td>
+
+              <td>
+                <v-select
+                  v-model="props.item.sold"
+                  :items="soldItems"
+                ></v-select>
+              </td>
+
+              <td>
+                <v-text-field
+                  :v-model="props.item.expDate"
+                  :value="formatDate(props.item.expDate)"
+                  readonly                
                   ></v-text-field>
               </td>
             </template>
@@ -127,6 +119,15 @@
                     name="drugQuantity"
                     v-model="drugQuantity"
                     label="Quantity"
+                    required
+                  ></v-text-field>
+                </v-flex>
+
+                <v-flex>
+                  <v-text-field
+                    name="drugPrice"
+                    v-model="drugPrice"
+                    label="Price"
                     mask="######"
                     required
                   ></v-text-field>
@@ -174,11 +175,20 @@
       },
       updateSelected() { 
         for (let med of this.selected) {
-          if (med.name != "" && med.expDate.length == 8) {
+          if (med.name != "") {
+            console.log({
+              name: med.name,
+              price: Number(med.price),
+              quantity: med.quantity,
+              sold: Boolean(med.sold),
+              expDate: med.expDate
+            });
             db.collection("medicines").doc(med.id).update({
               name: med.name,
+              price: Number(med.price),
               quantity: med.quantity,
-              expDate: med.expDate
+              sold: Boolean(med.sold),
+              // expDate: med.expDate
             });
           }
         }
@@ -186,32 +196,22 @@
         this.selected = []
       },
       addMedicine() {
-        const response = db.collection("medicines").add({
+        db.collection("medicines").add({
           name: this.drugName,
-          quantity: Number(this.drugQuantity),
+          price: this.drugPrice,
+          quantity: this.drugQuantity,
+          sold: Boolean(thus.drugIsSold),
           expDate: this.drugExpDate
-        });
-
-        response.then(function(data) {
-          db.collection("medicines").doc(data.id).update({
-            id: data.id
-          });
         });
 
         this.$refs.drugInfo.reset()
       },
-      increase(docId, quantity) {
-        db.collection("medicines").doc(docId).update({
-          quantity: Number(quantity) + 1
-        });
-      },
-      decrease(docId, quantity) {
-        if (quantity > 0) {
-          db.collection("medicines").doc(docId).update({
-            quantity: Number(quantity) - 1
-          });
+      formatDate(date) {
+          var t = new Date(1970, 0, 1); // Epoch
+          t.setSeconds(date.seconds);
+
+          return t.getDate() + '/' + t.getMonth() + '/' + t.getFullYear();
         }
-      }
     },
     computed: {
       drugsAreChosen: function() {
@@ -220,28 +220,36 @@
       formIsValid: function() {
         return this.drugName != ""
             && this.drugQuantity != null
-            && this.drugExpDate.length == 8;
+            && this.drugPrice != null
+            && this.drugExpDate.length == 8
+            && this.drugIsSold != null;
       }
     },
     data() {
       return {
         search: "",
         selected: [],
+        soldItems: [true, false],
         headers: [
           {text: "Name", value: "name"},
           {text: "Quantity", value: "quantity"},
+          {text: "Price", value: "price"},
+          {text: "Sold", value: "sold"},
           {text: "Expiration date", value: "expDate"}
         ],
         medicines: [
           { 
-            id: "Loading...",
             name: "Loading...",
+            price: "Loading...",
+            sold: "Loading...",
             quantity: "Loading...",
             expDate: "Loading..."
           }
         ],
         drugName: "",
         drugQuantity: null,
+        drugIsSold: null,
+        drugPrice: null,
         drugExpDate: ""
       }
     },
@@ -250,17 +258,20 @@
 
       app = this;
 
-      db.collection("medicines").onSnapshot(function(querySnapshot) {
+      db.collection("medicines").limit(25).onSnapshot(function(querySnapshot) {
         app.medicines = [];
 
-        querySnapshot.forEach(function(doc) {
+        querySnapshot.forEach(function(doc) {    
+          var docData = doc.data();
+
           app.medicines.push(
             {
               id: doc.id,
-              name: doc.name,
-              quantity: doc.quantity,
-              expDate: doc.expDate,
-              ...doc.data()
+              price: docData.price,
+              quantity: docData.quantity,
+              sold: docData.sold,
+              name: docData.name,
+              expDate: docData.expDate
             }
           );
         });
