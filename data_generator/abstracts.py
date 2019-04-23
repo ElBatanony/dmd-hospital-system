@@ -8,17 +8,23 @@ class Entity(ABC):
         self.id = None
         self.db = db
         self.collection = collection
+        self.ref = None
 
     @abstractmethod
     def to_dict(self):
         pass
 
-    def post_action(self):
+    def post_action(self, batch=None):
+        pass
+
+    def pre_action(self, batch=None):
         pass
 
     def save(self, db: firestore, batch):
-        doc = db.collection(self.collection).document()
-        self.id = doc.id
+        self.pre_action(batch)
+        self.ref = db.collection(self.collection).document()
+        self.id = self.ref.id
         # doc.set(self.to_dict())
-        batch.set(doc, self.to_dict())
-        self.post_action()
+        batch.set(self.ref, self.to_dict())
+        self.post_action(batch)
+        return self.ref

@@ -6,29 +6,28 @@ from data_generator import SampleDatabase
 
 def establish_creds():
     # Use a service account
-    cred = credentials.Certificate('cred.json')
+    cred = credentials.Certificate('cred_pidor.json')
     firebase_admin.initialize_app(cred)
 
 
 def main():
     establish_creds()
     db = firestore.client()
-    # db.collection('employees').document('weionerio').set({'name': 'rvbero'})
-    # params = {
-    #     'patients': 10,
-    #     'doctors': 5,
-    #     'others': 5,
-    #     'medicines': 10,
-    #     'records': 20,
-    #     'rooms': 20,
-    #     'reports': 3,
-    #     'prescriptions': 4,
-    #     'roomAssings': 7,
-    #     'bills': 7,
-    #     'chats': 2,
-    # }
-    # database = SampleDatabase(db=db, **params)
-    database = SampleDatabase(db=db)
+    params = {
+        'patients': 1200,
+        'doctors': 400,
+        'others': 700,
+        'medicines': 1000,
+        'records': 2500,
+        'rooms': 300,
+        'reports': 500,
+        'prescriptions': 1000,
+        'roomAssigns': 500,
+        'bills': 700,
+        'chats': 1000,
+    }
+    database = SampleDatabase(db=db, **params)
+    # database = SampleDatabase(db=db)
     database.generate()
     print("The database is generated and saved in Firestore")
 

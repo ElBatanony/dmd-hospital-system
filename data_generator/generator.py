@@ -10,17 +10,16 @@ class SampleDatabase:
         # initialize sample collection objects
         self.collections = []
 
-        # self.collections.append(SampleCollection(self, 'employees', doctors, Employee, context={'role': 'doctor'}))
-        # self.collections.append(SampleCollection(self, 'employees', others, Employee))
-        # self.collections.append(SampleCollection(self, 'patients', patients, Patient))
-        # self.collections.append(SampleCollection(self, 'medicines', medicines, Medicine))
-        # self.collections.append(SampleCollection(self, 'records', records, Record))
-        # self.collections.append(SampleCollection(self, 'rooms', rooms, Room))
-        # self.collections.append(SampleCollection(self, 'reports', reports, Report))
-        # self.collections.append(SampleCollection(self, 'prescriptions', prescriptions, Prescription))
-        # self.collections.append(SampleCollection(self, 'room_assignment', roomAssigns, RoomAssign))
-        # self.collections.append(SampleCollection(self, 'bills', bills, Bill))
-        # self.collections.append(SampleCollection(self, 'chats', chats, Chat))
+        self.collections.append(SampleCollection(self, 'employees', doctors, Employee, context={'role': 'doctor'}))
+        self.collections.append(SampleCollection(self, 'employees', others, Employee))
+        self.collections.append(SampleCollection(self, 'patients', patients, Patient))
+        self.collections.append(SampleCollection(self, 'medicines', medicines, Medicine))
+        self.collections.append(SampleCollection(self, 'records', records, Record))
+        self.collections.append(SampleCollection(self, 'rooms', rooms, Room))
+        self.collections.append(SampleCollection(self, 'reports', reports, Report))
+        self.collections.append(SampleCollection(self, 'prescriptions', prescriptions, Prescription))
+        self.collections.append(SampleCollection(self, 'room_assignment', roomAssigns, RoomAssign))
+        self.collections.append(SampleCollection(self, 'chats', chats, Chat))
 
     def generate(self):
         for collection in self.collections:
@@ -66,7 +65,7 @@ class SampleCollection:
         for record in self.records:
             record.save(self.database.db, batch)
             counter += 1
-            if counter == 490:
+            if counter == 100:
                 # print("batch commited!")
                 batch.commit()
                 batch = self.database.db.batch()
