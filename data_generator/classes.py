@@ -9,7 +9,12 @@ timeSlots = ["10:00-10:30", "10:30-11:00", "11:00-11:30", "11:30-12:00", "12:00-
              "13:30-14:00", "14:00-14:30", "14:30-15:00"]
 statusSlots = ["pending", "approved", "declined"]
 empRole = ["laboratorist", "nurse", "accountant", "pharmacist"]
-medNamed = ["Aspirin", "Viagra" "Trimoll", "Citramon", "Nosh-pa"]
+medNamed = ["Aspirin", "Viagra", "Trimoll", "Citramon", "Nosh-pa", "Abakavir", "Azinoks", "Azaran",
+            "Avaril", "Apap", "Zantak", "Zivox", "Zinerit", "Zitrek", "Zodak", "Imidil",
+            "Imuran", "Indap", "Itrazol", "Kagocel", "Kanizon", "Ketoph", "Klemastin"]
+medPrice = {"Aspirin": 1000, "Viagra": 250, "Trimoll": 350, "Citramon": 20, "Nosh-pa": 320, "Abakavir": 1500, "Azinoks": 800, "Azaran": 440,
+            "Avaril": 880, "Apap": 35, "Zantak": 175, "Zivox": 220, "Zinerit": 270, "Zitrek": 950, "Zodak": 720, "Imidil": 910,
+            "Imuran": 1000, "Indap": 1200, "Itrazol": 40, "Kagocel": 2000, "Kanizon": 255, "Ketoph": 90, "Klemastin": 140}
 cashed_collections = {}
 
 
@@ -58,7 +63,7 @@ class Medicine(Entity):
         self.expDate = get_fake_datetime(datetime.now(), datetime.now() + timedelta(days=120))
         self.sold = False
         self.name = choice(medNamed)
-        self.price = randint(1, 100) * 10
+        self.price = medPrice[self.name]
         self.quantity = randint(10, 100)
 
     def to_dict(self):
@@ -106,15 +111,15 @@ class Record(Entity):
     def __init__(self, db):
         super().__init__(db=db, collection=u'records')
 
-        col = get_collection(db, "patients")
-        arr = []
-        for doc in col:
-            arr.append(doc)
-        patient = choice(arr)
-        col = get_collection(db, "employees")
-        arr = get_by_condition(col, "role", "doctor")
-        doctor = choice(arr)
+        colPat = get_collection(db, "patients")
+        # arr = []
+        # for doc in col:
+        #     arr.append(doc)
+        patient = choice(colPat)
         self.patient = patient.reference
+        colDoc = get_collection(db, "employees")
+        arr = get_by_condition(colDoc, "role", "doctor")
+        doctor = choice(arr)
         self.doctor = doctor.reference
         self.description = "imagine some text here"
         self.date = get_fake_datetime()
@@ -138,8 +143,8 @@ class Room(Entity):
 
         self.free = True
         self.roomType = choice(["basic", "luxury", "economic"])
-        col = get_collection(db, "employees")
-        arr = get_by_condition(col, "role", "nurse")
+        colNur = get_collection(db, "employees")
+        arr = get_by_condition(colNur, "role", "nurse")
         nurse = choice(arr)
         self.nurse = nurse.reference
         self.roomNumber = randint(1, 1000)
@@ -159,15 +164,15 @@ class Report(Entity):
         self.date = get_fake_datetime()
         self.testResult = choice(["positive", "negative"])
         self.testType = "Urin"
-        col = get_collection(db, "employees")
-        arr = get_by_condition(col, "role", "laboratorist")
+        colLab = get_collection(db, "employees")
+        arr = get_by_condition(colLab, "role", "laboratorist")
         lab = choice(arr)
         self.laboratorist = lab.reference
-        col = get_collection(db, "patients")
-        patient = choice(col)
+        colPat = get_collection(db, "patients")
+        patient = choice(colPat)
         self.patient = patient.reference
-        col = get_collection(db, "employees")
-        arr = get_by_condition(col, "role", "nurse")
+        colNur = get_collection(db, "employees")
+        arr = get_by_condition(colNur, "role", "nurse")
         nurse = choice(arr)
         self.nurse = nurse.reference
 
@@ -184,32 +189,38 @@ class Report(Entity):
 
 class Prescription(Entity):
     def __init__(self, db: firestore):
-        super().__init__(db=db, collection=u'bills')
+        super().__init__(db=db, collection=u'prescriptions')
         self.date = get_fake_datetime()
         self.description = "some test here"
-        col = get_collection(db, "employees")
-        arr = get_by_condition(col, "role", "doctor")
+        colDoc = get_collection(db, "employees")
+        arr = get_by_condition(colDoc, "role", "doctor")
         doctor = choice(arr)
         self.doctor = doctor.reference
-        col = get_collection(db, "patient")
-        patient = choice(col)
+        colPat = get_collection(db, "patients")
+        patient = choice(colPat)
         self.patient = patient.reference
         arrBill = []
         medList = []
         for i in range(1, randint(1, 5)):
-            object = {
-                'name': choice(medNamed),
-                'price': randint(300, 1000),
+            colMed = get_collection(db, "medicines")
+            med = choice(colMed).to_dict()
+            obj = {
+                'name': med['name'],
+                'price': med['price'],
                 'quantity': randint(1, 10),
             }
-            medList.append(object)
-        for unit in medList:
-            object = {
-                'buyer': 'asdf',
-                'date': get_fake_datetime(),
-                'medList': medList,
-            }
-            arrBill.append(object)
+            medList.append(obj)
+        colBill = get_collection(db, "bills")
+        for i in range(0, len(medList)):
+            arrBill.append(choice(colBill).reference)
+
+        # for unit in medList:
+        #     obj = {
+        #         'buyer': unit.get('name'),
+        #         'date': get_fake_datetime(),
+        #         'medList': medList,
+        #     }
+        #     arrBill.append(obj)
         self.bills = arrBill
         self.medList = medList
 
@@ -229,12 +240,12 @@ class RoomAssign(Entity):
         super().__init__(db=db, collection=u'room_assignment')
         self.dateAddmitted = get_fake_datetime()
         self.dateDischarged = self.dateAddmitted + timedelta(days=randint(1, 5))
-        col = get_collection(db, "patient")
-        patient = choice(col)
-        self.patient = patient
-        col = get_collection(db, "rooms")
-        room = choice(col)
-        self.room = room
+        colPat = get_collection(db, "patients")
+        patient = choice(colPat)
+        self.patient = patient.reference
+        colRoom = get_collection(db, "rooms")
+        room = choice(colRoom)
+        self.room = room.reference
 
     def to_dict(self):
         return {
@@ -249,13 +260,13 @@ class Bill(Entity):
     def __init__(self, db: firestore):
         super().__init__(db=db, collection=u'bills')
         self.date = get_fake_datetime()
-        col = get_collection(db, "patient")
-        patient = choice(col)
-        self.buyer = patient
-        col = get_collection(db, "rooms")
+        colPat = get_collection(db, "patients")
+        patient = choice(colPat)
+        self.buyer = patient.reference
+        colRoom = get_collection(db, "medicines")
         meds = []
-        for i in range(0, randint(0, 10)):
-            meds.append(choice(col))
+        for i in range(0, randint(1, 10)):
+            meds.append(choice(colRoom).reference)
         self.medList = meds
 
     def to_dict(self):
@@ -269,14 +280,21 @@ class Bill(Entity):
 class Chat(Entity):
     def __init__(self, db: firestore):
         super().__init__(db=db, collection=u'chats')
-        col = get_collection(db, "patient")
+        col = get_collection(db, "patients")
         patient = choice(col)
-        self.patient = patient
+        self.patient = patient.reference
         col = get_collection(db, "employees")
         arr = get_by_condition(col, "role", "doctor")
         doctor = choice(arr)
-        self.doctor = doctor
+        self.doctor = doctor.reference
         msg = []
+        for i in range(1, randint(1, 15)):
+            obj = {
+                'data': get_fake_datetime(),
+                'test': "oneyne ame",
+                'sender': choice(["doctor", "patient"]),
+            }
+            msg.append(obj)
         self.messages = msg
 
     def to_dict(self):

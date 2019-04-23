@@ -3,8 +3,8 @@ from random import choice
 
 
 class SampleDatabase:
-    def __init__(self, db, patients=5, medicines=1, doctors=5, others=10, records=10, rooms=1, reports=1,
-                 prescriptions=1, roomAssigns=1, bills=1, chats=1):
+    def __init__(self, db, patients=1, medicines=5, doctors=5, others=10, records=10, rooms=4, reports=1,
+                 prescriptions=3, roomAssigns=1, bills=7, chats=1):
         self.db = db
 
         # initialize sample collection objects
@@ -16,8 +16,8 @@ class SampleDatabase:
         # self.collections.append(SampleCollection(self, 'medicines', medicines, Medicine))
         # self.collections.append(SampleCollection(self, 'records', records, Record))
         # self.collections.append(SampleCollection(self, 'rooms', rooms, Room))
-        self.collections.append(SampleCollection(self, 'reports', reports, Report))
-        # self.collections.append(SampleCollection(self, 'prescription', prescriptions, Prescription))
+        # self.collections.append(SampleCollection(self, 'reports', reports, Report))
+        # self.collections.append(SampleCollection(self, 'prescriptions', prescriptions, Prescription))
         # self.collections.append(SampleCollection(self, 'room_assignment', roomAssigns, RoomAssign))
         # self.collections.append(SampleCollection(self, 'bills', bills, Bill))
         # self.collections.append(SampleCollection(self, 'chats', chats, Chat))
