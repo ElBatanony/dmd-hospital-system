@@ -14,14 +14,21 @@ def main():
     establish_creds()
     db = firestore.client()
     # db.collection('employees').document('weionerio').set({'name': 'rvbero'})
-    # params = {
-    #     'patients': 1,
-    #     'medicines': 1,
-    #     'employees': 2,
-    #     'records': 1,
-    # }
-    # database = SampleDatabase(db=db, **params)
-    database = SampleDatabase(db=db)
+    params = {
+        'patients': 10,
+        'doctors': 5,
+        'others': 5,
+        'medicines': 10,
+        'records': 20,
+        'rooms': 20,
+        'reports': 3,
+        'prescriptions': 4,
+        'roomAssings': 7,
+        'bills': 7,
+        'chats': 2,
+    }
+    database = SampleDatabase(db=db, **params)
+    # database = SampleDatabase(db=db)
     database.generate()
     print("The database is generated and saved in Firestore")
 

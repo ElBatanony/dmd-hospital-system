@@ -16,8 +16,9 @@ class Entity(ABC):
     def post_action(self):
         pass
 
-    def save(self, db: firestore):
+    def save(self, db: firestore, batch):
         doc = db.collection(self.collection).document()
         self.id = doc.id
-        doc.set(self.to_dict())
+        # doc.set(self.to_dict())
+        batch.set(doc, self.to_dict())
         self.post_action()

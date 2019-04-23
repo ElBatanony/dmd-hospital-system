@@ -8,15 +8,19 @@ from random import choice
 timeSlots = ["10:00-10:30", "10:30-11:00", "11:00-11:30", "11:30-12:00", "12:00-12:30", "12:30-13:00", "13:00-13:30",
              "13:30-14:00", "14:00-14:30", "14:30-15:00"]
 statusSlots = ["pending", "approved", "declined"]
-empRole = ["doctor", "laboratorist", "nurse", "accountant", "pharmacist"]
-medNamed = ["Aspirin", "Viagra"]
+empRole = ["laboratorist", "nurse", "accountant", "pharmacist"]
+medNamed = ["Aspirin", "Viagra" "Trimoll", "Citramon", "Nosh-pa"]
+cashed_collections = {}
 
 
 def get_collection(db: firestore, collection):
+    if collection in cashed_collections:
+        return cashed_collections[collection]
     docs = db.collection(collection).stream()
     arr = []
     for doc in docs:
         arr.append(doc)  # doc.id  doc.to_dict()['role']
+    cashed_collections[collection] = arr
     return arr
 
 
@@ -34,14 +38,7 @@ class Patient(Entity):
         self.email = profile['mail']
         self.gender = profile['sex']
         self.address = profile['address']
-        # self.dateAdmitted = get_fake_datetime()
-        # self.dateDischarged = get_fake_datetime(start=self.dateAdmitted, end=self.dateAdmitted + timedelta(days=7))
-
-    # def get_pdetails(self):
-    #     return {
-    #         'dateAdmitted': self.dateAdmitted,
-    #         'dateDischarged': self.dateDischarged
-    #     }
+        self.medList = []
 
     def to_dict(self):
         return {
@@ -49,8 +46,8 @@ class Patient(Entity):
             u'address': self.address,
             u'contactNumber': self.contactNumber,
             u'gender': self.gender,
-            # u'Pdetails': self.get_pdetails(),
-            u'email': self.email
+            u'email': self.email,
+            u'medList': self.medList,
         }
 
 
@@ -59,6 +56,7 @@ class Medicine(Entity):
         super().__init__(db=db, collection=u'medicines')
 
         self.expDate = get_fake_datetime(datetime.now(), datetime.now() + timedelta(days=120))
+        self.sold = False
         self.name = choice(medNamed)
         self.price = randint(1, 100) * 10
         self.quantity = randint(10, 100)
@@ -66,6 +64,7 @@ class Medicine(Entity):
     def to_dict(self):
         return {
             u'expDate': self.expDate,
+            u'sold': self.sold,
             u'name': self.name,
             u'price': self.price,
             u'quantity': self.quantity
@@ -73,7 +72,7 @@ class Medicine(Entity):
 
 
 class Employee(Entity):
-    def __init__(self, db):
+    def __init__(self, db, role="others"):
         super().__init__(db=db, collection=u'employees')
 
         profile = fake.simple_profile()
@@ -81,8 +80,11 @@ class Employee(Entity):
         self.contactNumber = fake.phone_number()
         self.gender = profile['sex']
         self.address = profile['address']
-        self.salary = randint(12, 36) * 1000
-        self.role = choice(empRole)
+        self.salary = randint(1200, 3600) * 10
+        if role == "doctor":
+            self.role = role
+        elif role == "others":
+            self.role = choice(empRole)
         if self.role == "doctor":
             self.status = "permanent"
 
@@ -170,4 +172,111 @@ class Report(Entity):
             u'testType': self.testType,
             u'laboratorist': self.laboratorist,
             u'patient': self.patient
+        }
+
+
+class Prescription(Entity):
+    def __init__(self, db: firestore):
+        super().__init__(db=db, collection=u'bills')
+        self.date = get_fake_datetime()
+        self.description = "some test here"
+        col = get_collection(db, "employees")
+        arr = get_by_condition(col, "role", "doctor")
+        doctor = choice(arr)
+        self.doctor = doctor
+        col = get_collection(db, "patient")
+        patient = choice(col)
+        self.patient = patient
+        arrBill = []
+        medList = []
+        for i in range(1, randint(1, 5)):
+            object = {
+                'name': choice(medNamed),
+                'price': randint(300, 1000),
+                'quantity': randint(1, 10),
+            }
+            medList.append(object)
+        for unit in medList:
+            object = {
+                'buyer': 'asdf',
+                'date': get_fake_datetime(),
+                'medList': medList,
+            }
+        self.bills = arrBill
+        self.medList = medList
+
+    def to_dict(self):
+        return {
+            u'date': self.date,
+            u'description': self.description,
+            u'doctor': self.doctor,
+            u'patient': self.patient,
+            u'bills': self.bills,
+            u'medList': self.medList
+        }
+
+    def post_action(self):
+
+
+
+class RoomAssign(Entity):
+    def __init__(self, db: firestore):
+        super().__init__(db=db, collection=u'room_assignment')
+        self.dateAddmitted = get_fake_datetime()
+        self.dateDischarged = self.dateAddmitted + timedelta(days=randint(1, 5))
+        col = get_collection(db, "patient")
+        patient = choice(col)
+        self.patient = patient
+        col = get_collection(db, "rooms")
+        room = choice(col)
+        self.room = room
+
+    def to_dict(self):
+        return {
+            u'date_admitted': self.dateAddmitted,
+            u'date_discharged': self.dateDischarged,
+            u'patient': self.patient,
+            u'room': self.room
+        }
+
+
+# class Bill(Entity):
+#     def __init__(self, db: firestore):
+#         super().__init__(db=db, collection=u'bills')
+#         self.date = get_fake_datetime()
+#         col = get_collection(db, "patient")
+#         patient = choice(col)
+#         self.buyer = patient
+#         col = get_collection(db, "rooms")
+#         meds = []
+#         for i in range(0, randint(0, 10)):
+#             meds.append(choice(col))
+#         self.medList = meds
+#
+#     def to_dict(self):
+#         return {
+#             u'date': self.date,
+#             u'buyer': self.buyer,
+#             u'medList': self.medList,
+#         }
+
+
+class Chat(Entity):
+    def __init__(self, db: firestore):
+        super().__init__(db=db, collection=u'chats')
+        col = get_collection(db, "patient")
+        patient = choice(col)
+        self.patient = patient
+        col = get_collection(db, "employees")
+        arr = get_by_condition(col, "role", "doctor")
+        doctor = choice(arr)
+        self.doctor = doctor
+        msg = []
+        self.messages = msg
+
+    def to_dict(self):
+        return {
+            u'patient': self.patient,
+            u'doctor': self.doctor,
+            u'messages': self.messages,
         }
