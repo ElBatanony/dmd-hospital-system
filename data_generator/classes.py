@@ -8,7 +8,7 @@ from collections import defaultdict
 timeSlots = ["10:00-10:30", "10:30-11:00", "11:00-11:30", "11:30-12:00", "12:00-12:30", "12:30-13:00", "13:00-13:30",
              "13:30-14:00", "14:00-14:30", "14:30-15:00"]
 statusSlots = ["pending", "approved", "declined"]
-empRole = ["laboratorist", "nurse", "accountant", "pharmacist"]
+empRole = ["laboratorist", "nurse", "accountant", "pharmacist", "receptionist"]
 medNamed = ["Aspirin", "Viagra", "Trimoll", "Citramon", "Nosh-pa", "Abakavir", "Azinoks", "Azaran",
             "Avaril", "Apap", "Zantak", "Zivox", "Zinerit", "Zitrek", "Zodak", "Imidil",
             "Imuran", "Indap", "Itrazol", "Kagocel", "Kanizon", "Ketoph", "Klemastin"]
@@ -68,7 +68,12 @@ def get_by_condition(arr, collection, key, value):
     hash_str = collection + '.' + key + '.' + value
     if hash_str in cashed_cond_collections:
         return cashed_cond_collections[hash_str]
+
     entities = get_entities(collection)
+    if entities is None:
+        cashed_cond_collections[hash_str] = [ref for ref in arr if ref.get().to_dict()[key] == value]
+        return cashed_cond_collections[hash_str]
+
     res = []
     for ref in arr:
         for ent in entities:
@@ -390,7 +395,7 @@ class Chat(Entity):
         for i in range(1, randint(1, 15)):
             obj = {
                 'data': get_fake_datetime(),
-                'test': fake.paragraph(),
+                'tex    t': fake.paragraph(),
                 'sender': choice(["doctor", "patient"]),
             }
             msg.append(obj)
