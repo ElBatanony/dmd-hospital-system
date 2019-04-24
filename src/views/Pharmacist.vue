@@ -297,7 +297,7 @@
 
       app = this;
 
-      db.collection("medicines").onSnapshot(function(querySnapshot) {
+      db.collection("medicines").get().then(function(querySnapshot) {
         app.medicines = [];
 
         querySnapshot.forEach(function(doc) {    
