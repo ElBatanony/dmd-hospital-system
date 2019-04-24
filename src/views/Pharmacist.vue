@@ -47,42 +47,34 @@
               </td>
 
               <td>
-                <v-layout row wrap justify-start align-center>
-                  <v-flex xs2>
-                    <v-btn
-                      flat
-                      icon
-                      color="error"
-                      @click="decrease(props.item.id, props.item.quantity)"
-                    ><v-icon>remove</v-icon></v-btn>
-                  </v-flex>
-
-                  <v-flex xs3>
-                    <v-text-field 
-                      mask="######"
-                      v-model="props.item.quantity"
-                      :value="props.item.quantity"
-                      required
-                    ></v-text-field>
-                  </v-flex>
-                  
-                  <v-flex xs2>
-                    <v-btn
-                      flat
-                      icon
-                      color="primary"
-                      @click="increase(props.item.id, props.item.quantity)"
-                    ><v-icon>add</v-icon></v-btn>
-                  </v-flex>
-                </v-layout>
+                <v-text-field 
+                  v-model="props.item.quantity"
+                  :value="props.item.quantity"
+                  required
+                ></v-text-field>
               </td>
 
               <td>
                 <v-text-field
-                  mask="date"
-                  v-model="props.item.expDate"
-                  :value="props.item.expDate"
+                  mask="#####"
+                  v-model="props.item.price"
+                  :value="props.item.price"
                   required
+                  ></v-text-field>
+              </td>
+
+              <td>
+                <v-select
+                  v-model="props.item.sold"
+                  :items="soldItems"
+                ></v-select>
+              </td>
+
+              <td>
+                <v-text-field
+                  :v-model="props.item.expDate"
+                  :value="formatDate(props.item.expDate)"
+                  readonly                
                   ></v-text-field>
               </td>
             </template>
@@ -114,33 +106,83 @@
 
           <v-container>
             <v-form ref="drugInfo">
-              <v-text-field
-                name="drugName"
-                v-model="drugName"
-                label="Name"
-                required
-              ></v-text-field>
-
               <v-layout row wrap>
                 <v-flex>
+                <v-text-field
+                  name="drugName"
+                  v-model="drugName"
+                  label="Name"
+                  required
+                ></v-text-field>
+                </v-flex>
+
+                <v-flex xs3>
                   <v-text-field
                     name="drugQuantity"
                     v-model="drugQuantity"
                     label="Quantity"
+                    required
+                  ></v-text-field>
+                </v-flex>
+
+
+              </v-layout>
+
+              <v-layout row wrap>
+                <v-flex>
+                  <v-text-field
+                    name="drugPrice"
+                    v-model="drugPrice"
+                    label="Price"
                     mask="######"
                     required
                   ></v-text-field>
                 </v-flex>
 
                 <v-flex>
+                  <v-select
+                    name="drugIsSold"
+                    v-model="drugIsSold"
+                    label="Sold"
+                    :items="soldItems"
+                  ></v-select>
+                </v-flex>
+
+                <!-- <v-flex>
                   <v-text-field
                     name="drugExpDate"
                     v-model="drugExpDate"
                     label="Expiration date"
-                    mask="date"
                     placeholder="dd/mm/yyyy"
                     required
                   ></v-text-field>
+                </v-flex> -->
+
+                <v-flex>
+                  <v-dialog
+                    ref="dialog"
+                    v-model="modal"
+                    :return-value.sync="date"
+                    persistent
+                    lazy
+                    full-width
+                    width="290px"
+                  >
+                    <template v-slot:activator="{ on }">
+                      <v-text-field
+                        v-model="drugExpDate"
+                        label="Date"
+                        prepend-icon="event"
+                        readonly
+                        v-on="on"
+                      ></v-text-field>
+                    </template>
+                    <v-date-picker v-model="drugExpDate" scrollable>
+                      <v-spacer></v-spacer>
+                      <v-btn flat color="primary" @click="modal = false">Cancel</v-btn>
+                      <v-btn flat color="primary" @click="$refs.dialog.save(drugExpDate)">OK</v-btn>
+                    </v-date-picker>
+                  </v-dialog>
                 </v-flex>
               </v-layout>
 
@@ -174,11 +216,12 @@
       },
       updateSelected() { 
         for (let med of this.selected) {
-          if (med.name != "" && med.expDate.length == 8) {
+          if (med.name != "") {
             db.collection("medicines").doc(med.id).update({
               name: med.name,
+              price: Number(med.price),
               quantity: med.quantity,
-              expDate: med.expDate
+              sold: Boolean(med.sold),
             });
           }
         }
@@ -186,32 +229,26 @@
         this.selected = []
       },
       addMedicine() {
-        const response = db.collection("medicines").add({
-          name: this.drugName,
-          quantity: Number(this.drugQuantity),
-          expDate: this.drugExpDate
-        });
+        const [year, month, day] = this.drugExpDate.split('-');
 
-        response.then(function(data) {
-          db.collection("medicines").doc(data.id).update({
-            id: data.id
-          });
-        });
+        db.collection("medicines").add({
+          name: this.drugName,
+          price: this.drugPrice,
+          quantity: this.drugQuantity,
+          sold: Boolean(this.drugIsSold),
+          expDate: new Date(year, month, day)
+        });        
 
         this.$refs.drugInfo.reset()
       },
-      increase(docId, quantity) {
-        db.collection("medicines").doc(docId).update({
-          quantity: Number(quantity) + 1
-        });
-      },
-      decrease(docId, quantity) {
-        if (quantity > 0) {
-          db.collection("medicines").doc(docId).update({
-            quantity: Number(quantity) - 1
-          });
+      formatDate(date) {
+          if (date == null)
+            return "Loading...";
+          var t = new Date(1970, 0, 1);
+          t.setSeconds(date.seconds);
+
+          return t.getFullYear() + '-' + t.getMonth() + '-' + t.getDate();
         }
-      }
     },
     computed: {
       drugsAreChosen: function() {
@@ -220,29 +257,39 @@
       formIsValid: function() {
         return this.drugName != ""
             && this.drugQuantity != null
-            && this.drugExpDate.length == 8;
+            && this.drugPrice != null
+            && this.drugExpDate != null
+            && this.drugIsSold != null;
       }
     },
     data() {
       return {
         search: "",
+        date: null,
         selected: [],
+        modal: false,
+        soldItems: [true, false],
         headers: [
           {text: "Name", value: "name"},
           {text: "Quantity", value: "quantity"},
+          {text: "Price", value: "price"},
+          {text: "Sold", value: "sold"},
           {text: "Expiration date", value: "expDate"}
         ],
         medicines: [
           { 
-            id: "Loading...",
             name: "Loading...",
+            price: "Loading...",
+            sold: "Loading...",
             quantity: "Loading...",
-            expDate: "Loading..."
+            expDate: null
           }
         ],
         drugName: "",
         drugQuantity: null,
-        drugExpDate: ""
+        drugIsSold: null,
+        drugPrice: null,
+        drugExpDate: null
       }
     },
     created() {
@@ -250,17 +297,20 @@
 
       app = this;
 
-      db.collection("medicines").onSnapshot(function(querySnapshot) {
+      db.collection("medicines").get().then(function(querySnapshot) {
         app.medicines = [];
 
-        querySnapshot.forEach(function(doc) {
+        querySnapshot.forEach(function(doc) {    
+          var docData = doc.data();
+
           app.medicines.push(
             {
               id: doc.id,
-              name: doc.name,
-              quantity: doc.quantity,
-              expDate: doc.expDate,
-              ...doc.data()
+              price: docData.price,
+              quantity: docData.quantity,
+              sold: docData.sold,
+              name: docData.name,
+              expDate: docData.expDate
             }
           );
         });
