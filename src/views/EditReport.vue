@@ -14,22 +14,18 @@
 
         <v-select
         v-model="patient"
-        :items="patients"
-        :rules="[v => !!v || 'Patient is required']"
         label="Patient"
-        required
+        readonly
         ></v-select>
 
         <v-select
-        v-model="testT"
-        :items="types"
-        :rules="[v => !!v || 'Test Type is required']"
+        v-model="testType"
         label="Test Type"
-        required
+        readonly
         ></v-select>
 
         <v-textarea
-            v-model="testR"
+            v-model="testResult"
             auto-grow
             label="Test Result"
             rows="2"
@@ -52,57 +48,39 @@ export default {
             report_id: '',
             laboratorist: '',
             patient: '',
+            requester: '',
             laboratorists: [],
-            patients: [],
-            testR: '',
-            testT: '',
-            types: [
-                'Complete Blood Count',
-                'Urinalysis',
-                'Basic Metabolic Panel',
-                'Comprehensive Metabolic Panel',
-                'Hemoglobin A1C'
-            ],
+            testResult: '',
+            testType: '',
         };
     },
   beforeRouteEnter (to, from, next) {
     db.collection('reports').doc(to.params.report_id).get().then(doc => {
         next(function(vm) {
             vm.report_id = doc.id
-            doc.data().patient.get().then(res => {
-              vm.patient = res.id
-            })
             doc.data().laboratorist.get().then(res => {
               vm.laboratorist = res.id
             })
             vm.laboratorists = []
-            vm.patients = []
-            db.collection('patients').get().then(querySnapshot => {
-                querySnapshot.forEach(doc => {
-                    let data = doc.id;
-                    vm.patients.push(data);
-                })
-            })
-            db.collection('employees').where("role", "==", "Laboratorist")
+            db.collection('employees').limit(20).where("role", "==", "Laboratorist")
             .get().then(querySnapshot => {
                 querySnapshot.forEach(doc => {
                     let data = doc.id;
                     vm.laboratorists.push(data);
                 })
             })
-            vm.testR = doc.data().testR
-            vm.testT = doc.data().testT
-          
+            vm.testResult = doc.data().testResult
+            vm.testType = doc.data().testType
+            vm.patient = doc.data().patient.id
+            vm.requester = doc.data().requester.id
       })
       })
   },
   methods: {
     update () {
       db.collection('reports').doc(this.report_id).update({
-            laboratorist: db.doc("employees/"+this.laboratorist),
-            patient: db.doc("patients/"+this.patient),
-            testT: this.testT,
-            testR: this.testR
+            testResult: this.testResult,
+            // date:
           })
           .then(() => {
             this.$router.push('/laboratorist')
