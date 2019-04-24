@@ -4,36 +4,35 @@
     v-model="valid"
     lazy-validation
     >
-        <v-select
+        <!-- <v-select
         v-model="laboratorist"
         :items="laboratorists"
-        :rules="[v => !!v || 'Test Type is required']"
         label="Laboratorist"
         required
-        ></v-select>
+        ></v-select> -->
 
         <v-select
         v-model="patient"
         :items="patients"
-        :rules="[v => !!v || 'Test Type is required']"
+        :rules="[v => !!v || 'Patient is required']"
         label="Patient"
         required
         ></v-select>
 
         <v-select
-        v-model="testT"
+        v-model="testType"
         :items="types"
         :rules="[v => !!v || 'Test Type is required']"
         label="Test Type"
         required
         ></v-select>
 
-        <v-textarea
-            v-model="testR"
+        <!-- <v-textarea
+            v-model="testResult"
             auto-grow
             label="Test Result"
             rows="2"
-        ></v-textarea>
+        ></v-textarea> -->
 
         <v-btn @click="submit" color="success">save</v-btn>
         <v-btn @click="back">back</v-btn>
@@ -52,8 +51,8 @@ var db = firebase.firestore()
             patient: '',
             laboratorists: [],
             patients: [],
-            testR: '',
-            testT: '',
+            testResult: '',
+            testType: '',
             types: [
                 'Complete Blood Count',
                 'Urinalysis',
@@ -84,15 +83,17 @@ var db = firebase.firestore()
     methods: {
       submit () {
         db.collection('reports').add({
-            laboratorist: db.doc("employees/"+this.laboratorist),
+            date: '',
+            laboratorist: '', //db.doc("employees/"+this.laboratorist),
             patient: db.doc("patients/"+this.patient),
-            testT: this.testT,
-            testR: this.testR
+            testType: this.testType,
+            testResult: '',//this.testResult
+            requester: db.collection('employees').doc(firebase.auth().currentUser.uid)
         })
-        this.$router.push('/laboratorist');
+        this.$router.push('/nurse');
       },
       back () {
-        this.$router.push('/laboratorist');
+        this.$router.push('/nurse');
       }
     }
   }
