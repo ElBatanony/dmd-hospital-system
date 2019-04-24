@@ -18,9 +18,10 @@
             <v-data-table :headers="headers" :items="reports" :search="search">
             <template v-slot:items="props">
                 <td>{{ props.item.laboratorist }}</td>
+                <td>{{ props.item.requester }}</td>
                 <td>{{ props.item.patient }}</td>
-                <td>{{ props.item.testT }}</td>
-                <td>{{ props.item.testR }}</td>
+                <td>{{ props.item.testType }}</td>
+                <td>{{ props.item.testResult }}</td>
                 <td>
                 <v-btn round dark ripple v-bind:to="{name: 'Edit Report', params: {report_id: props.item.report_id}}">edit</v-btn>
                 </td>
@@ -35,20 +36,20 @@
         </v-card>
         </v-tab-item>
     </v-tabs>
-    <v-card-text style="height: 100px; position: relative">
-        <v-fab-transition>
-            <v-btn to="/new_report"
-                color="pink"
-                dark
-                absolute
-                bottom
-                right
-                fab
-            >
-                <v-icon>add</v-icon>
-            </v-btn>
-        </v-fab-transition>
-    </v-card-text>
+<!--    <v-card-text style="height: 100px; position: relative">-->
+<!--        <v-fab-transition>-->
+<!--            <v-btn to="/new_report"-->
+<!--                color="pink"-->
+<!--                dark-->
+<!--                absolute-->
+<!--                bottom-->
+<!--                right-->
+<!--                fab-->
+<!--            >-->
+<!--                <v-icon>add</v-icon>-->
+<!--            </v-btn>-->
+<!--        </v-fab-transition>-->
+<!--    </v-card-text>-->
   </div>
 </template>
 
@@ -68,16 +69,20 @@ export default {
             value: "laboratorist"
         },
         {
+            text: "Requester",
+            value: "requester"
+        },
+        {
             text: "Patient",
             value: "patient"
         },
         { 
             text: "Test Type",
-            value: "testT" 
+            value: "testType"
         },
         {
             text: "Test Result",
-            value: "testR"
+            value: "testResult"
         },
         { 
             text: "Edit Info", 
@@ -88,14 +93,15 @@ export default {
     };
   },
     created () {
-        db.collection('reports').get().then(querySnapshot => {
+        db.collection('reports').limit(5).get().then(querySnapshot => {
             querySnapshot.forEach(doc => {
                 let data = {
                     'report_id': doc.id,
                     'patient': '',
-                    'testR': doc.data().testR,
-                    'testT': doc.data().testT,     
-                    'laboratorist': ''
+                    'testResult': doc.data().testResult,
+                    'testType': doc.data().testType,
+                    'laboratorist': '',
+                    'requester': '',
                 }
                 doc.data().laboratorist.get()
                     .then(res => {
@@ -103,7 +109,11 @@ export default {
                         doc.data().patient.get()
                         .then(res => {
                             data["patient"] = res.data().name
-                            this.reports.push(data)
+                            doc.data().requester.get()
+                                .then(res => {
+                                    data['requester'] = res.data().name
+                                    this.reports.push(data)
+                                })
                         })
                     })                 
                 
