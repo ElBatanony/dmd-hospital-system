@@ -1,4 +1,5 @@
 <template>
+  <div>
   <v-tabs color="blue" dark slider-color="yellow">
     <v-tab ripple>Rooms</v-tab>
     <v-tab ripple>Free Rooms</v-tab>
@@ -55,9 +56,9 @@
             <td>{{ props.item.roomType }}</td>
             <!-- <td>{{ props.item.patientId }}</td> -->
             <!-- <td>{{ props.item.patientName }}</td> -->
-            <!-- <td>
+            <td>
               <v-btn v-on:click="openRoomDialog(props.item.roomNumber)" round dark ripple>Allocate</v-btn>
-            </td> -->
+            </td>
           </template>
           <v-alert
             v-slot:no-results
@@ -70,37 +71,53 @@
     </v-tab-item>
 
     <v-tab-item>
-      <v-card flat>
-        <v-card-title>
-          Reports
-          <v-spacer></v-spacer>
-          <v-text-field
-            v-model="search"
-            append-icon="search"
-            label="Search"
-            single-line
-            hide-details
-          ></v-text-field>
-        </v-card-title>
-        <v-data-table :headers="headers2" :items="reports" :search="search2">
-          <template v-slot:items="props">
-            <td>{{ props.item.testT }}</td>
-            <td>{{ props.item.testR }}</td>
-            <td>{{ props.item.laboratorist }}</td>
-            <td>{{ props.item.laboratoristName }}</td>
-            <td>{{ props.item.patient }}</td>
-            <td>{{ props.item.patientName }}</td>
-          </template>
-          <v-alert
-            v-slot:no-results
-            :value="true"
-            color="error"
-            icon="warning"
-          >Your search for "{{ search2 }}" found no results.</v-alert>
-        </v-data-table>
-      </v-card>
-    </v-tab-item>
-
+        <v-card flat>
+            <v-card-title>
+            Diagnostic Reports
+            <v-spacer></v-spacer>
+            <v-text-field
+                v-model="search"
+                append-icon="search"
+                label="Search"
+                single-line
+                hide-details
+            ></v-text-field>
+            </v-card-title>
+            <v-data-table :headers="headers2" :items="reports" :search="search2">
+            <template v-slot:items="props">
+                <td>{{ props.item.laboratorist }}</td>
+                <td>{{ props.item.patient }}</td>
+                <td>{{ props.item.testType }}</td>
+                <td>{{ props.item.testResult }}</td>
+                <!-- <td>
+                <v-btn round dark ripple v-bind:to="{name: 'Edit Report', params: {report_id: props.item.report_id}}">edit</v-btn>
+                </td> -->
+            </template>
+            <v-alert
+                v-slot:no-results
+                :value="true"
+                color="error"
+                icon="warning"
+            >Your search for "{{ search }}" found no results.</v-alert>
+            </v-data-table>
+            
+        </v-card>
+        <v-card-text style="height: 100px; position: relative">
+        <v-fab-transition>
+            <v-btn to="/new_report"
+                color="pink"
+                dark
+                absolute
+                bottom
+                right
+                fab
+            >
+                <v-icon>add</v-icon>
+            </v-btn>
+          </v-fab-transition>
+          </v-card-text>
+        </v-tab-item>
+    
 
     <v-dialog
       v-model="roomDialog"
@@ -139,6 +156,8 @@
 
 
   </v-tabs>
+  
+  </div>
 </template>
 
 <script>
@@ -153,7 +172,7 @@ var names = []
 var adjust = function(){
   nurse.rooms2 = []
   nurse.rooms = []
-  db.collection('rooms').where("nurse", "==", firebase.auth().currentUser.uid).where("free", "==", false)
+  db.collection('rooms').where("nurse", "==", firebase.auth().currentUser.uid).where("free", "==", false).limit(10)
       .get().then(querySnapshot => {
         querySnapshot.forEach(doc2 => {
           
@@ -195,17 +214,21 @@ var adjust = function(){
         })
         
       });
-
-      db.collection('rooms').where("free", "==", true).where("nurse", "==", firebase.auth().currentUser.uid).get().then(querySnapshot => {
-        querySnapshot.forEach(doc2 => {
-          var data = {
-                'roomNumber': doc2.data().roomNumber,
-                'roomType': doc2.data().roomType,
-          }
-          nurse.rooms2.push(data)
-        })
+      db.collection('rooms')
+        .where("free", "==", true)
+          .where("nurse", "==", db.collection('employees').doc(firebase.auth().currentUser.uid))
+            .limit(10)
+            .get()
+              .then(querySnapshot => {
+                  querySnapshot.forEach(doc2 => {
+                    var data = {
+                      'roomNumber': doc2.data().roomNumber,
+                      'roomType': doc2.data().roomType,
+                    }
+                    nurse.rooms2.push(data)
+                  })
         
-      });
+              });
       
 }
 
@@ -270,12 +293,25 @@ export default {
       rooms: [],
       search2: "",
       headers2: [
-        { text: "Test Type", value: "testT" },
-        { text: "Test Result", value: "testR" },
-        { text: "Laboratorist ID", value: "laboratorist" },
-        { text: "Laboratorist name", value: "laboratoristName" },
-        { text: "Patient ID", value: "patient" },
-        { text: "Patient Name", value: "patientName" }
+        {
+            text: "Laboratorist",
+            align: "left",
+            sortable: true,
+            value: "laboratorist"
+        },
+        {
+            text: "Patient",
+            value: "patient"
+        },
+        { 
+            text: "Test Type",
+            value: "testT" 
+        },
+        {
+            text: "Test Result",
+            value: "testR"
+        },
+       
       ],
       headers3: [
         {
@@ -285,7 +321,10 @@ export default {
           value: "roomNumber"
         },
         { text: "Type of room", value: "roomType" },
-        // { text: "Room allocation", value: "edit2" },
+        { 
+            text: "Edit Info", 
+            value: "edit" 
+        }
       ],
       rooms2: [],
       search3: "",
@@ -298,49 +337,44 @@ export default {
       if(user){
       console.log(nurse.$route.name)
       adjust();
-      
-      db.collection('reports').get().then(querySnapshot =>{
-        querySnapshot.forEach(doc => {
-          // if(doc.data())
-          const data = {
-            'laboratorist': doc.data().laboratorist.id,
-            'patient': doc.data().patient.id,
-            'testT': doc.data().test_type,
-            'testR': doc.data().test_result,
-            'patientName': '',
-            'laboratoristName': ''
-          }
 
-          var pQuery = db.collection('patients').doc(doc.data().patient.id).get()
-          if(pQuery){  
-            pQuery.then(snapshot =>{
-              if(snapshot.data()){
-                data.patientName = snapshot.data().name
-              }else{
-                data.patientName = 'undefined'
-              }
+      db.collection('reports').limit(10).get().then(querySnapshot => {
+            querySnapshot.forEach(doc => {
+                let data = {
+                    'report_id': doc.id,
+                    'patient': '',
+                    'testResult': doc.data().testResult,
+                    'testType': doc.data().testType,     
+                    'laboratorist': '',
+                    // 'requester': db.collection('employees').doc(firebase.auth().currentUser.uid)
+                }
+                if(doc.data().laboratorist){
+                doc.data().laboratorist.get()
+                    .then(res => {
+                        console.log(res.data())
+                        data["laboratorist"] = res.data().name
+                        doc.data().patient.get()
+                        .then(res => {
+                            data["patient"] = res.data().name
+                            nurse.reports.push(data)
+                        })
+                    })                 
+                }else{
+                  data.laboratorist = 'undefined'
+                  if(doc.data().patient){
+                    doc.data().patient.get().then(snapshot => {
+                      data.patient = snapshot.data().name;
+                    })
+                    nurse.reports.push(data)
+                  }else{
+                    data.patient = 'undefined'
+                    nurse.reports.push(data)
+                  }
+                }
             })
-          } else {
-              data.patientName = 'undefined'
-          }
-
-          var refDoc = db.collection('employees').doc(doc.data().laboratorist.id)
-          if(refDoc){
-            refDoc.onSnapshot(snapshot =>{
-              if(snapshot.data()){
-                data.laboratoristName = snapshot.data().name;  
-              }else{
-                data.laboratoristName = 'undefined'
-              }
-            })
-          }else{
-            data.laboratoristName = 'undefined'
-          }
-
-          nurse.reports.push(data)
         })
-      }) 
-      }
+      
+        }
     });
   },
 
