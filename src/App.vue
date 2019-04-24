@@ -2,37 +2,45 @@
   <v-app>
     <v-toolbar app>
       <v-toolbar-title class="headline text-uppercase">
-        <span>Vuetify</span>
-        <span class="font-weight-light">MATERIAL DESIGN</span>
+        <span>Hospital management system</span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn
-        flat
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
-      >
-        <span class="mr-2">Latest Release</span>
-      </v-btn>
-    </v-toolbar>
 
+      <v-toolbar-items class="hidden-sm-and-down">
+        <v-btn flat>{{ this.$route.name }}</v-btn>
+        <v-btn flat v-if="this.$route.name == 'home' && !loggedIn" to="/login"
+          >Log in</v-btn
+        >
+        <v-btn
+          flat
+          v-if="this.$route.name != 'login' && loggedIn"
+          @click="logOut"
+          >Log out</v-btn
+        >
+      </v-toolbar-items>
+    </v-toolbar>
     <v-content>
-      <HelloWorld/>
+      <v-container fluid>
+        <router-view></router-view>
+      </v-container>
     </v-content>
+    <v-footer app></v-footer>
   </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld'
+import firebase from "firebase";
 
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  },
-  data () {
-    return {
-      //
+  name: "app",
+  methods: {
+    logOut() {
+      firebase.auth().signOut();
+    },
+    loggedIn() {
+      return firebase.auth().currentUser != null;
     }
-  }
-}
+  },
+  computed: {}
+};
 </script>
