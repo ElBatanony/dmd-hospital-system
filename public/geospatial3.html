@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script
+      type="text/javascript"
+      src="https://www.gstatic.com/charts/loader.js"
+    ></script>
+    <script src="https://www.gstatic.com/firebasejs/5.9.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.9.3/firebase-firestore.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css"
+      rel="stylesheet"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
+    />
+  </head>
+
+  <body>
+    <div id="app">
+      <v-app>
+        <v-content>
+          <v-container fluid>
+            <h1 class="title">Hospital System Geospatial Search</h1>
+            <v-btn color="info" onclick="fetchData()">Fetch Data</v-btn>
+            <v-btn color="success" onclick="runGeospatial()"
+              >Run Geospatial Query</v-btn
+            >
+            <h1 class="subheading" v-if="readTime">Fetching data took {{readTime}} ms</h1>
+            <v-layout row wrap class="pa-2 mb-2">
+              <v-flex xs12 sm6 md3>
+                <v-text-field label="Salary" v-model="salary"></v-text-field>
+              </v-flex>
+
+              <v-flex xs12 sm6 md3>
+                <v-text-field
+                  label="Patients"
+                  v-model="patients"
+                ></v-text-field>
+              </v-flex>
+
+              <v-flex xs12 sm6 md3>
+                <v-text-field
+                  label="Distance"
+                  v-model="searchDist"
+                ></v-text-field>
+              </v-flex>
+            </v-layout>
+
+            <v-layout row justify-center>
+              <v-dialog v-model="resultsDialog" scrollable max-width="400px">
+                <template v-slot:activator="{ on }">
+                  <!-- <v-btn color="primary" dark v-on="on">Open Dialog</v-btn> -->
+                </template>
+                <v-card>
+                  <v-card-title
+                    >Geospatial Search Results:
+                    {{ searchResults.length }}</v-card-title
+                  >
+                  <v-divider></v-divider>
+                  <v-card-text style="height: 500px;">
+                    <div v-for="result in searchResults">
+                      {{ result.name }}, salary: {{result.salary}}, patients: {{result.patients}}
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
+            </v-layout>
+            <br />
+            <div id="scatterchart_material"></div>
+          </v-container>
+        </v-content>
+      </v-app>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+    <script>
+      let app = new Vue({
+        el: "#app",
+        data: {
+          salary: 24000,
+          patients: 5,
+          searchDist: 3,
+          searchResults: ["hi", "hello"],
+          resultsDialog: false,
+          readTime: null
+        }
+      });
+    </script>
+
+    <script src="geospatial.js"></script>
+  </body>
+</html>
